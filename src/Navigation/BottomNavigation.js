@@ -11,7 +11,7 @@ import Feather from "react-native-vector-icons/Feather";
 import colorValue from "../Shared/commoStyle/ColorValue";
 import { createMaterialBottomTabNavigator } from "@react-navigation/material-bottom-tabs";
 import Fontisto from "react-native-vector-icons/Fontisto";
-const Tab = createMaterialBottomTabNavigator();
+const Tab = createBottomTabNavigator();
 const BottomNavigation = () => {
   return (
     <Tab.Navigator
@@ -19,17 +19,14 @@ const BottomNavigation = () => {
       headerShown:false,
       showLabel:false,
       tabBarStyle: {
-        position: 'absolute',
         padding: 1,
-        bottom: 20,
-        left: 20,
-        right: 20,
         elevation: 5,
         backgroundColor: '#ffffff',
         borderRadius: 15,
         height:70,
         ...styles.shadow
-      }
+      },
+      tabBarActiveTintColor: colorValue.primary,
     }}
       // screenOptions={{
       //   tabBarActiveTintColor: colorValue.primary,

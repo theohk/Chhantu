@@ -1,98 +1,174 @@
-import React from "react";
-import { StatusBar, StyleSheet, Text, Touchable, View } from "react-native";
-import { Image } from "react-native-elements/dist/image/Image";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import React, { useEffect, useState } from "react";
 import {
-  commonJustify,
-  commonStyle,
-} from "../../Shared/commoStyle/CommonStyle";
-import { Button, Input } from "react-native-elements";
-import colorValue from "../../Shared/commoStyle/ColorValue";
-import { TouchableOpacity } from "react-native-gesture-handler";
-import fontValue from "../../Shared/commoStyle/FontValue";
-import { colors } from "../SearchScreen/theme";
+  KeyboardAvoidingView,
+  StyleSheet,
+  Text,
+  Image,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { auth } from "../../../firebase";
 
-const LoginScreen = ({ navigation }) => {
+const LoginScreen = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [notification, setNotification] = useState("");
 
-  let activeColors= colors;
+  const navigation = useNavigation();
+  const route = useRoute();
+  const { notification: routeNotification } = route.params || {};
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        navigation.replace("BottomNavigation");
+      }
+    });
+
+    return unsubscribe;
+  }, []);
+
+  useEffect(() => {
+    if (routeNotification) {
+      setNotification(routeNotification);
+    }
+  }, [routeNotification]);
+
+  const dismissNotification = () => {
+    setNotification("");
+  };
+
+  const handleLogin = () => {
+    auth
+      .signInWithEmailAndPassword(email, password)
+      .then((userCredentials) => {
+        const user = userCredentials.user;
+        console.log("Logged in with:", user.email);
+      })
+      .catch((error) => alert(error.message));
+  };
 
   return (
-    <View style={[{ backgroundColor: activeColors.secondary,  }, styles.imageCard]}>
-      <StatusBar />
-      <View style={styles.main}>
-        <View style={[commonJustify.rowCenter, { height: "40%" }]}>
-          <Image
-            style={[styles.image]}
-            source={require("../../../assets/image/chhantu.png")}
-          />
-        </View>
-
-        <View>
-          <Input
-            placeholder="Enter your email"
-            leftIcon={{ type: "ant-design", name: "mail" }}
-          />
-
-          <Input
-            placeholder="Enter your password"
-            leftIcon={{ type: "ant-design", name: "lock" }}
-          />
-
-          <Button
-            onPress={() => navigation.navigate("BottomNavigation")}
-            buttonStyle={{ backgroundColor: colorValue.primary, marginBottom:10 }}
-            title="LOG IN"
-          />
-          <View style={commonJustify.rowCenter}>
-            <TouchableOpacity>
-              <Text
-                style={
-                  commonStyle({
-                    fontSize: 14,
-                    color: colorValue.primary,
-                  }).text
-                }
-              >
-                Forgot password
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+    <KeyboardAvoidingView style={styles.container} behavior="padding">
+      <View style={styles.imageContainer}>
+        <Image
+          style={[styles.image]}
+          source={require("../../../assets/image/chhantu.png")}
+        />
       </View>
-      <View style={{ position: "absolute", bottom: 40, width: "100%" }}>
-        <View style={commonJustify.rowCenter}>
-          <TouchableOpacity>
-            <Text>Don't have an account? </Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate("SignUpScreen")}>
-            <Text
-              style={
-                commonStyle({
-                  fontSize: 14,
-                  color: colorValue.primary,
-                }).text
-              }
-            >
-              Register Now
-            </Text>
-          </TouchableOpacity>
-        </View>
+      <View style={styles.inputContainer}>
+        <TextInput
+          placeholder="Email"
+          value={email}
+          onChangeText={(text) => setEmail(text)}
+          style={styles.input}
+        />
+        <TextInput
+          placeholder="Password"
+          value={password}
+          onChangeText={(text) => setPassword(text)}
+          style={styles.input}
+          secureTextEntry
+        />
       </View>
-    </View>
+
+      {notification && (
+        <TouchableOpacity
+          onPress={dismissNotification}
+          style={styles.notificationContainer}
+        >
+          <Text style={styles.notificationText}>{notification}</Text>
+        </TouchableOpacity>
+      )}
+
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity onPress={handleLogin} style={styles.button}>
+          <Text style={styles.buttonText}>Login</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate("SignUpScreen")}>
+          <Text style={styles.buttonOutlineText}>
+            Don't have an account? Sign Up
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </KeyboardAvoidingView>
   );
 };
 
 export default LoginScreen;
 
 const styles = StyleSheet.create({
-  main: {
-    height: "100%",
-    width: "100%",
+  container: {
+    flex: 1,
     justifyContent: "center",
-    padding: 10,
+    alignItems: "center",
+  },
+  inputContainer: {
+    width: "80%",
+  },
+  imageContainer: {
+    marginTop: -120,
+    marginBottom: 120,
+  },
+  input: {
+    backgroundColor: "white",
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderRadius: 10,
+    marginTop: 5,
+  },
+  buttonContainer: {
+    width: "60%",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 40,
+  },
+  button: {
+    backgroundColor: "#EE4B2B",
+    width: "100%",
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  buttonOutline: {
+    backgroundColor: "white",
+    marginTop: 5,
+    borderColor: "#0782F9",
+    borderWidth: 2,
+  },
+  buttonText: {
+    color: "white",
+    fontWeight: "700",
+    fontSize: 16,
+  },
+  buttonOutlineText: {
+    marginTop: 10,
+    color: "#801515",
+    fontWeight: "700",
+    fontSize: 16,
   },
   image: {
-    width: 300,
-    height: 300,
+    width: 200,
+    height: 200,
+    justifyContent: "center",
+    alignItems: "center",
     resizeMode: "contain",
+  },
+  notificationContainer: {
+    width: "80%",
+    backgroundColor: "#F9E0CE",
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderRadius: 10,
+    marginTop: 10,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  notificationText: {
+    color: "#801515",
+    fontWeight: "700",
+    fontSize: 16,
   },
 });

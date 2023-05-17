@@ -1,99 +1,146 @@
-import React from "react";
-import { StatusBar, StyleSheet, Text, Touchable, View } from "react-native";
-import { Image } from "react-native-elements/dist/image/Image";
+import { useNavigation } from "@react-navigation/native";
+import React, { useEffect, useState } from "react";
 import {
-  commonJustify,
-  commonStyle,
-} from "../../Shared/commoStyle/CommonStyle";
-import Icon from "react-native-vector-icons/FontAwesome";
-import { Button, Input } from "react-native-elements";
-import colorValue from "../../Shared/commoStyle/ColorValue";
-import { ScrollView, TouchableOpacity } from "react-native-gesture-handler";
-import fontValue from "../../Shared/commoStyle/FontValue";
-import { NavigationContainer } from "@react-navigation/native";
+  KeyboardAvoidingView,
+  StyleSheet,
+  Text,
+  Image,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { auth } from "../../../firebase";
 
-const SignUpScreen = ({ navigation }) => {
+const SignUpScreen = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+
+  const navigation = useNavigation();
+
+useEffect(() => {
+  const unsubscribe = auth.onAuthStateChanged((user) => {
+    if (user) {
+      navigation.navigate("LoginScreen", {
+        notification: "Registration successful! You can now log in.",
+      });
+    }
+  });
+
+  return unsubscribe;
+}, []);
+
+
+  const handleSignUp = () => {
+    auth
+      .createUserWithEmailAndPassword(email, password)
+      .then((userCredentials) => {
+        const user = userCredentials.user;
+        console.log("Registered with:", user.email);
+        navigation.navigate("LoginScreen", {
+          notification: "Registration successful! You may now log in.",
+        });
+      })
+      .catch((error) => alert(error.message));
+  };
+
+
   return (
-    <ScrollView>
-      <StatusBar backgroundColor="white" />
-      <View style={styles.main}>
-        <View style={[commonJustify.rowCenter]}>
-          <Image
-            style={[styles.image]}
-            source={require("../../../assets/image/chhantu.png")}
-          />
-        </View>
-
-        <View>
-          <Input
-            placeholder="Enter your name"
-            leftIcon={{ type: "ant-design", name: "user" }}
-          />
-
-          <Input
-            placeholder="Enter your email"
-            leftIcon={{ type: "ant-design", name: "mail" }}
-          />
-
-          <Input
-            placeholder="Enter your password"
-            leftIcon={{ type: "ant-design", name: "lock" }}
-          />
-
-          <Input
-            placeholder="Enter your Mobile"
-            leftIcon={{ type: "ant-design", name: "phone" }}
-          />
-
-          <Input
-            placeholder="Enter your Blood Group"
-            leftIcon={{ type: "fontisto", name: "blood-drop" }}
-          />
-
-          <Input
-            placeholder="Enter your Adress"
-            leftIcon={{ type: "evil-icons", name: "map" }}
-          />
-
-          <Button
-            buttonStyle={{ backgroundColor: colorValue.primary }}
-            title="SIGN UP"
-          />
-          <View style={commonJustify.rowCenter}>
-            <TouchableOpacity
-              onPress={() => navigation.navigate("LoginScreen")}
-            >
-              <Text
-                style={
-                  commonStyle({
-                    fontSize: 14,
-                    color: colorValue.primary,
-                  }).text
-                }
-              >
-                Login
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+    <KeyboardAvoidingView style={styles.container} behavior="padding">
+      <View style={styles.imageContainer}>
+        <Image
+          style={[styles.image]}
+          source={require("../../../assets/image/chhantu.png")}
+        />
       </View>
-      <View></View>
-    </ScrollView>
+      <View style={styles.inputContainer}>
+        <TextInput
+          placeholder="Email"
+          value={email}
+          onChangeText={(text) => setEmail(text)}
+          style={styles.input}
+        />
+        <TextInput
+          placeholder="Password"
+          value={password}
+          onChangeText={(text) => setPassword(text)}
+          style={styles.input}
+          secureTextEntry
+        />
+      </View>
+
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity onPress={handleSignUp} style={styles.button}>
+          <Text style={styles.buttonText}>Sign Up</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => navigation.navigate("LoginScreen")}>
+          <Text style={styles.buttonOutlineText}>
+            Already have an account? Login
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </KeyboardAvoidingView>
   );
 };
 
 export default SignUpScreen;
 
 const styles = StyleSheet.create({
-  main: {
-    height: "100%",
-    width: "100%",
+  container: {
+    flex: 1,
     justifyContent: "center",
-    padding: 10,
+    alignItems: "center",
+  },
+  inputContainer: {
+    width: "80%",
+  },
+  imageContainer: {
+    marginTop: -120,
+    marginBottom: 120,
+  },
+  input: {
+    backgroundColor: "white",
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderRadius: 10,
+    marginTop: 5,
+  },
+  buttonContainer: {
+    width: "60%",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 40,
+  },
+  button: {
+    backgroundColor: "#EE4B2B",
+    width: "100%",
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  buttonOutline: {
+    backgroundColor: "white",
+    marginTop: 5,
+    borderColor: "#0782F9",
+    borderWidth: 2,
+  },
+  buttonText: {
+    color: "white",
+    fontWeight: "700",
+    fontSize: 16,
+  },
+  buttonOutlineText: {
+    marginTop: 10,
+    color: "#801515",
+    fontWeight: "700",
+    fontSize: 16,
   },
   image: {
     width: 200,
     height: 200,
+    justifyContent: "center",
+    alignItems: "center",
     resizeMode: "contain",
   },
 });
